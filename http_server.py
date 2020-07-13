@@ -1,4 +1,3 @@
-import sqlite3
 import time
 from flask import Flask, request
 from chain_data_fetcher import ChainDataFetcher
@@ -26,7 +25,9 @@ chain_data_fetcher.start()
 @app.route('/get-mined-block-timestamps', methods=['GET'])
 def get_mined_block_timestamps():
     addr = request.args.get("address")
-    return chain_data_fetcher.miner_block_timestamps(addr)
+    return {
+        "block_timestamps": chain_data_fetcher.miner_block_timestamps(addr)
+    }
 
 
 @app.route('/get-miner-list', methods=['GET'])

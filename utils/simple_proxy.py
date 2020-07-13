@@ -1,5 +1,3 @@
-import time
-
 import jsonrpcclient.client
 from jsonrpcclient.exceptions import ReceivedErrorResponseError
 

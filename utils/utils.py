@@ -145,7 +145,7 @@ def setup_log():
     ch = logging.StreamHandler(sys.stdout)
     formatter = logging.Formatter(
         fmt=
-        '%(asctime)s.%(msecs)03d000Z %(name)s (%(levelname)s): %(message)s',
+        '%(asctime)s.%(msecs)03dZ %(name)s %(process)d %(thread)d (%(levelname)s): %(message)s',
         datefmt='%Y-%m-%dT%H:%M:%S')
     ch.setFormatter(formatter)
     logging.root.addHandler(ch)

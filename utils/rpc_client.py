@@ -1,6 +1,4 @@
-import os
 import eth_utils
-import rlp
 from .utils import *
 
 class RpcClient:

@@ -85,7 +85,7 @@ class ChainDataFetcher(threading.Thread):
         await asyncio.gather(sub_fut, catch_up_fut, log_fut)
 
     async def sub(self, subscription):
-        async for new_epoch_data in subscription.iter(60):
+        async for new_epoch_data in subscription.iter(3600):
             epoch_number = int(new_epoch_data["epochNumber"], 16)
             # epoch_hashes = new_epoch_data["epochHashesOrdered"]
             # for new_hash in epoch_hashes:

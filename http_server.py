@@ -26,7 +26,7 @@ chain_data_fetcher.start()
 def get_mined_block_timestamps():
     addr = request.args.get("address")
     return {
-        "block_timestamps": chain_data_fetcher.miner_block_timestamps(addr)
+        "block_timestamps": chain_data_fetcher.miner_block_timestamps("0x"+addr)
     }
 
 

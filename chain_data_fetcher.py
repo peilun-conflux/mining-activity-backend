@@ -163,7 +163,7 @@ class ChainDataFetcher(threading.Thread):
             miner_list.append({
                 "address": miner_addr[2:],
                 "block_count": len(miner.timestamps),
-                "active_period": miner.active_period,
+                "active_period": int(miner.active_period/3600),
                 "mining_reward": miner.reward,
                 "latest_mined_block": miner.timestamps[-1],
             })

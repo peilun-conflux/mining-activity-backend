@@ -12,6 +12,7 @@ from utils.utils import http_rpc_url, pubsub_url
 
 MAX_ACTIVE_PERIOD = 3600 * 2  # 2h
 BLOCK_COUNT = 0
+TIMESTAMP_HIST_COUNT = 1000
 
 logger = logging.getLogger("fetcher")
 LATEST_EPOCH_KEY = "latest_epoch"
@@ -85,19 +86,22 @@ class ChainDataFetcher(threading.Thread):
         await asyncio.gather(sub_fut, catch_up_fut, log_fut)
 
     async def sub(self, subscription):
-        async for new_epoch_data in subscription.iter(3600):
-            epoch_number = int(new_epoch_data["epochNumber"], 16)
-            # epoch_hashes = new_epoch_data["epochHashesOrdered"]
-            # for new_hash in epoch_hashes:
-            #     if new_hash not in self.blocks:
-            #         new_block = self.rpc_client.block_by_hash(new_hash)
-            #         miner = new_block["author"]
-            #         timestamp = new_block["timestamp"]
-            #         self.blocks[new_hash] = Block(new_hash, miner, timestamp)
-            #         self.miners.setdefault(miner, set()).add(new_hash)
-            await self.update_epoch_number(epoch_number, catch_up=False)
-        print("pubsub exits")
-        exit()
+        while True:
+            try:
+                async for new_epoch_data in subscription.iter(3600):
+                    epoch_number = int(new_epoch_data["epochNumber"], 16)
+                    # epoch_hashes = new_epoch_data["epochHashesOrdered"]
+                    # for new_hash in epoch_hashes:
+                    #     if new_hash not in self.blocks:
+                    #         new_block = self.rpc_client.block_by_hash(new_hash)
+                    #         miner = new_block["author"]
+                    #         timestamp = new_block["timestamp"]
+                    #         self.blocks[new_hash] = Block(new_hash, miner, timestamp)
+                    #         self.miners.setdefault(miner, set()).add(new_hash)
+                    await self.update_epoch_number(epoch_number, catch_up=False)
+            except Exception as e:
+                logger.warning(e)
+                subscription = await self.pubsub_client.subscribe("epochs")
 
     async def update_epoch_number(self, epoch_number, catch_up):
         # logger.info(self.progress_string())
@@ -178,7 +182,23 @@ class ChainDataFetcher(threading.Thread):
         if miner not in self.miners:
             return []
         else:
-            r = str(self.miners[miner].timestamps)
+            # TODO This can be optimized if it's too slow.
+            min_timestamp = self.miners[miner].timestamps[0]
+            max_timestamp = self.miners[miner].timestamps[-1]
+            period = (max_timestamp - min_timestamp) / TIMESTAMP_HIST_COUNT
+            hist = [0 for _ in range(TIMESTAMP_HIST_COUNT)]
+            for ts in self.miners[miner].timestamps[:-1]:
+                index = int((ts - min_timestamp) / period)
+                hist[index] += 1
+            # Add max_timestamp
+            hist[-1] += 1
+            for i in range(TIMESTAMP_HIST_COUNT - 1):
+                hist[i + 1] += hist[i]
         self._lock.release()
-        return r
+        print("hist", hist[-1], len(self.miners[miner].timestamps))
+        return str({
+            "min_timestamp": min_timestamp,
+            "max_timestamp": max_timestamp,
+            "accumulative_count": hist,
+        })
 

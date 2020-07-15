@@ -2,6 +2,8 @@ import logging
 import threading
 import asyncio
 import bisect
+import time
+
 import sqlitedict
 from concurrent.futures.thread import ThreadPoolExecutor
 
@@ -101,11 +103,15 @@ class ChainDataFetcher(threading.Thread):
                     await self.update_epoch_number(epoch_number, catch_up=False)
             except Exception as e:
                 logger.warning(e)
-                subscription = await self.pubsub_client.subscribe("epochs")
 
     async def update_epoch_number(self, epoch_number, catch_up):
         # logger.info(self.progress_string())
-        rewards = self.rpc_client.get_block_reward_info(self.rpc_client.EPOCH_NUM(epoch_number))
+        while True:
+            rewards = self.rpc_client.get_block_reward_info(self.rpc_client.EPOCH_NUM(epoch_number))
+            if len(rewards) != 0:
+                break
+            else:
+                await asyncio.sleep(1)
         blocks = {}
         for reward_info in rewards:
             block_hash = reward_info["blockHash"]
@@ -195,7 +201,6 @@ class ChainDataFetcher(threading.Thread):
             for i in range(TIMESTAMP_HIST_COUNT - 1):
                 hist[i + 1] += hist[i]
         self._lock.release()
-        print("hist", hist[-1], len(self.miners[miner].timestamps))
         return str({
             "min_timestamp": min_timestamp,
             "max_timestamp": max_timestamp,

@@ -60,7 +60,7 @@ class Miner:
 class ChainDataFetcher(threading.Thread):
     def __init__(self, server_ip="127.0.0.1", http_port=12537, pubsub_port=12535, initial_epoch=0):
         super().__init__(daemon=True)
-        self.rpc_client = RpcClient(SimpleRpcProxy(http_rpc_url(server_ip, http_port), timeout=30))
+        self.rpc_client = RpcClient(SimpleRpcProxy(http_rpc_url(server_ip, http_port), timeout=3600))
         self.pubsub_client = PubSubClient(pubsub_url(server_ip, pubsub_port))
         self.blocks_db = sqlitedict.SqliteDict("data.db", tablename="blocks", autocommit=True)
         self.metadata_db = sqlitedict.SqliteDict("data.db", tablename="metadata", autocommit=True)

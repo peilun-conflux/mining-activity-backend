@@ -1,7 +1,7 @@
 import time
 from flask import Flask, request
 from chain_data_fetcher import ChainDataFetcher
-from utils.utils import setup_log
+from utils.utils import setup_log, parse_date
 
 setup_log()
 app = Flask(__name__)
@@ -18,7 +18,7 @@ def inc(b: Block):
         time.sleep(1)
 
 
-chain_data_fetcher = ChainDataFetcher()
+chain_data_fetcher = ChainDataFetcher(start_timestamp=parse_date("10:00-12/07/2020"), end_timestamp=parse_date("24:00-15/07/2020"))
 chain_data_fetcher.start()
 
 

@@ -15,6 +15,7 @@ from utils.utils import http_rpc_url, pubsub_url
 MAX_ACTIVE_PERIOD = 3600 * 2  # 2h
 BLOCK_COUNT = 0
 TIMESTAMP_HIST_COUNT = 1000
+MAX_TIMESTAMP = 1 << 63
 
 logger = logging.getLogger("fetcher")
 LATEST_EPOCH_KEY = "latest_epoch"
@@ -61,7 +62,8 @@ class Miner:
 
 
 class ChainDataFetcher(threading.Thread):
-    def __init__(self, server_ip="127.0.0.1", http_port=12537, pubsub_port=12535, initial_epoch=0):
+    def __init__(self, server_ip="127.0.0.1", http_port=12537, pubsub_port=12535, initial_epoch=0, start_timestamp=0,
+                 end_timestamp=MAX_TIMESTAMP):
         super().__init__(daemon=True)
         self.rpc_client = RpcClient(SimpleRpcProxy(http_rpc_url(server_ip, http_port), timeout=3600))
         self.pubsub_client = PubSubClient(pubsub_url(server_ip, pubsub_port))
@@ -71,6 +73,8 @@ class ChainDataFetcher(threading.Thread):
         self.miners = {}
 
         self.initial_epoch = initial_epoch
+        self.end_timestamp = end_timestamp
+        self.start_timestamp = start_timestamp
         self.activated = False
         self._lock = threading.Lock()
 
@@ -124,7 +128,8 @@ class ChainDataFetcher(threading.Thread):
                 blocks[block_hash] = Block(author, reward, timestamp, epoch_number)
         self._lock.acquire()
         for block_hash, block in blocks.items():
-            self.miners.setdefault(block.miner, Miner(block.miner, self.activated)).add_block(block)
+            if self.start_timestamp <= block.timestamp <= self.end_timestamp:
+                self.miners.setdefault(block.miner, Miner(block.miner, self.activated)).add_block(block)
         self._lock.release()
         self.blocks_db.update(blocks)
         if catch_up or self.activated:
@@ -160,7 +165,7 @@ class ChainDataFetcher(threading.Thread):
         if LATEST_EPOCH_KEY in self.metadata_db:
             last_epoch = self.metadata_db[LATEST_EPOCH_KEY]
             for block in self.blocks_db.values():
-                if block.epoch >= self.initial_epoch:
+                if block.epoch >= self.initial_epoch and self.start_timestamp <= block.timestamp <= self.end_timestamp:
                     self._lock.acquire()
                     self.miners.setdefault(block.miner, Miner(block.miner, self.activated)).add_block(block)
                     self._lock.release()

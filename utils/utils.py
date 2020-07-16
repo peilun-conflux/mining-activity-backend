@@ -1,3 +1,4 @@
+import datetime
 import inspect
 import logging
 import re
@@ -754,3 +755,7 @@ class bcolors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
+
+
+def parse_date(s):
+    return time.mktime(datetime.datetime.strptime(s, "%M:%S-%d/%m/%Y").timetuple())

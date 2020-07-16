@@ -1,3 +1,4 @@
+import json
 import logging
 import threading
 import asyncio
@@ -189,7 +190,7 @@ class ChainDataFetcher(threading.Thread):
                 "latest_mined_block": miner.timestamps[-1],
             })
         self._lock.release()
-        return str(miner_list)
+        return json.dumps(miner_list)
 
     def miner_block_timestamps(self, miner):
         self._lock.acquire()
@@ -209,7 +210,7 @@ class ChainDataFetcher(threading.Thread):
             for i in range(TIMESTAMP_HIST_COUNT - 1):
                 hist[i + 1] += hist[i]
         self._lock.release()
-        return str({
+        return json.dumps({
             "min_timestamp": min_timestamp,
             "max_timestamp": max_timestamp,
             "accumulative_count": hist,

@@ -152,14 +152,18 @@ def wait_until(predicate,
 
 
 def setup_log():
+    fh = logging.FileHandler("server.log")
     ch = logging.StreamHandler(sys.stdout)
     formatter = logging.Formatter(
         fmt=
         '%(asctime)s.%(msecs)03dZ %(name)s %(process)d %(thread)d (%(levelname)s): %(message)s',
         datefmt='%Y-%m-%dT%H:%M:%S')
+    fh.setFormatter(fh)
     ch.setFormatter(formatter)
+    ch.setLevel("INFO")
+    fh.setLevel("DEBUG")
     logging.root.addHandler(ch)
-    logging.root.setLevel("INFO")
+    logging.root.addHandler(fh)
 
 
 def sha3_256(x): return _sha3.keccak_256(x).digest()

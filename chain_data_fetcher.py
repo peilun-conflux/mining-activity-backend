@@ -92,6 +92,7 @@ class ChainDataFetcher(threading.Thread):
             try:
                 async for new_epoch_data in subscription.iter(3600):
                     epoch_number = int(new_epoch_data["epochNumber"], 16)
+                    logger.debug(f"pubsub get epoch number {epoch_number}")
                     # epoch_hashes = new_epoch_data["epochHashesOrdered"]
                     # for new_hash in epoch_hashes:
                     #     if new_hash not in self.blocks:
@@ -105,12 +106,13 @@ class ChainDataFetcher(threading.Thread):
                 logger.warning(e)
 
     async def update_epoch_number(self, epoch_number, catch_up):
-        # logger.info(self.progress_string())
+        logger.debug(f"update_epoch_number: epoch_number={epoch_number}, catch_up={catch_up}")
         while True:
             rewards = self.rpc_client.get_block_reward_info(self.rpc_client.EPOCH_NUM(epoch_number))
             if len(rewards) != 0:
                 break
             else:
+                logger.debug(f"{epoch_number} not executed, wait for 1 second")
                 await asyncio.sleep(1)
         blocks = {}
         for reward_info in rewards:
@@ -127,6 +129,7 @@ class ChainDataFetcher(threading.Thread):
         self.blocks_db.update(blocks)
         if catch_up or self.activated:
             self.metadata_db[LATEST_EPOCH_KEY] = epoch_number
+        logger.debug(f"update_epoch_number end: epoch_number={epoch_number}")
 
     async def catch_up(self, start_epoch_number: int, end_epoch_number: int):
         futures = []

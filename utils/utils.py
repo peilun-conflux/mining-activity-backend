@@ -159,12 +159,14 @@ def setup_log():
         fmt=
         '%(asctime)s.%(msecs)03dZ %(name)s %(process)d %(thread)d (%(levelname)s): %(message)s',
         datefmt='%Y-%m-%dT%H:%M:%S')
-    fh.setFormatter(fh)
+    fh.setFormatter(formatter)
     ch.setFormatter(formatter)
     ch.setLevel("INFO")
     fh.setLevel("DEBUG")
     logging.root.addHandler(ch)
     logging.root.addHandler(fh)
+    logging.root.setLevel("DEBUG")
+
 
 
 def sha3_256(x): return _sha3.keccak_256(x).digest()

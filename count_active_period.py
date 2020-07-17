@@ -5,6 +5,13 @@ miner_to_period = {}
 miner_list = json.load(open("miner_list.json", "r"))
 for miner in miner_list:
     miner_to_period[miner["address"]] = miner["active_period"]
+first = True
 for row in csv.reader(open("miner.csv")):
-    addr = row[5][2:]
-    print(miner_to_period[addr])
+    if first:
+        first = False
+        continue
+    addr = row[3][2:].lower()
+    if addr in miner_to_period:
+        print(miner_to_period[addr])
+    else:
+        print(0)

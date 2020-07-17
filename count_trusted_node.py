@@ -18,8 +18,8 @@ for row in csv.reader(open("miner.csv")):
     if first:
         first = False
         continue
-    addr = row[5][2:]
-    pubkey = row[6]
+    addr = row[3][2:].lower()
+    pubkey = row[4]
     try:
         if encode_hex(priv_to_pub(pubkey)) in trusted_addr:
             print(True)

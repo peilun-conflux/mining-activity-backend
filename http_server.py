@@ -6,7 +6,8 @@ from utils.utils import setup_log, parse_date
 
 setup_log()
 app = Flask(__name__)
-chain_data_fetcher = ChainDataFetcher(start_timestamp=parse_date("10:00-12/07/2020"), end_timestamp=parse_date("24:00-15/07/2020"))
+chain_data_fetcher = ChainDataFetcher(start_timestamp=parse_date("10:00-12/07/2020"),
+                                      end_timestamp=parse_date("23:59-15/07/2020"))
 chain_data_fetcher.start()
 
 

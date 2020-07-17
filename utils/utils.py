@@ -760,4 +760,4 @@ class bcolors:
 
 
 def parse_date(s):
-    return time.mktime(datetime.datetime.strptime(s, "%M:%S-%d/%m/%Y").timetuple())
+    return time.mktime(datetime.datetime.strptime(s, "%H:%M-%d/%m/%Y").timetuple())

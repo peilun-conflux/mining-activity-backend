@@ -9,6 +9,6 @@ do
   ip=${a[1]}
   dir=${a[2]}
   echo $ip
-  scp $user@$ip:$dir/net_config/trusted_nodes.json $db_dir/$ip-trusted_nodes.json
+  scp -o "StrictHostKeyChecking no" $user@$ip:$dir/net_config/trusted_nodes.json $db_dir/$ip-trusted_nodes.json
 done < host_work_dirs
 python3 count_trusted_node.py

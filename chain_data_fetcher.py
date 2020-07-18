@@ -4,6 +4,7 @@ import threading
 import asyncio
 import bisect
 import time
+import traceback
 
 import sqlitedict
 from concurrent.futures.thread import ThreadPoolExecutor
@@ -109,6 +110,7 @@ class ChainDataFetcher(threading.Thread):
                     await self.update_epoch_number(epoch_number, catch_up=False)
             except Exception as e:
                 logger.warning(e)
+                traceback.print_exc()
 
     async def update_epoch_number(self, epoch_number, catch_up):
         logger.debug(f"update_epoch_number: epoch_number={epoch_number}, catch_up={catch_up}")

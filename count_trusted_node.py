@@ -1,5 +1,6 @@
 import csv
 import json
+import os
 
 from utils.utils import priv_to_pub, encode_hex
 
@@ -8,22 +9,35 @@ def parse_pubkey_in_url(url: str):
     return url[10:138]
 
 
-trusted_addr = set()
-trusted_nodes = json.load(open("net_config/trusted_nodes.json", "r"))
-for node in trusted_nodes["nodes"]:
-    node_pub_key = parse_pubkey_in_url(node["url"])
-    trusted_addr.add(node_pub_key)
+trusted_nodes_to_days = {}
+nodes_dir = "trusted_nodes"
+for date_dir in os.listdir(nodes_dir):
+    trusted_node_ids = set()
+    for root, _, files in os.walk(os.path.join(nodes_dir, date_dir)):
+        # In one day, a miner is regarded a trusted node if it appears at any node's trusted_nodes.
+        for node_file in files:
+            if node_file.endswith("trusted_nodes.json"):
+                with open(os.path.join(root, node_file), "r") as f:
+                    trusted_nodes = json.load(f)
+                    for node in trusted_nodes["nodes"]:
+                        node_pub_key = parse_pubkey_in_url(node["url"])
+                        trusted_node_ids.add(node_pub_key)
+    # Count how many days these trusted_nodes have been
+    for node_id in trusted_node_ids:
+        trusted_nodes_to_days.setdefault(node_id, 0)
+        trusted_nodes_to_days[node_id] += 1
 first = True
 for row in csv.reader(open("miner.csv")):
     if first:
         first = False
         continue
-    addr = row[3][2:].lower()
+    node_id = row[3][2:].lower()
     pubkey = row[4]
     try:
-        if encode_hex(priv_to_pub(pubkey)) in trusted_addr:
-            print(True)
+        node_id = encode_hex(priv_to_pub(pubkey))
+        if node_id in trusted_nodes_to_days:
+            print(trusted_nodes_to_days[node_id])
         else:
-            print(False)
+            print(0)
     except Exception as _e:
-        print(False)
+        print(0)

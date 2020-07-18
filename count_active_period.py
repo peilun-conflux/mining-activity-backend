@@ -12,6 +12,6 @@ for row in csv.reader(open("miner.csv")):
         continue
     addr = row[3][2:].lower()
     if addr in miner_to_period:
-        print(miner_to_period[addr])
+        print(miner_to_period[addr] + 1)
     else:
         print(0)

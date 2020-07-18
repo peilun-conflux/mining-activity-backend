@@ -8,8 +8,7 @@ from flask_cors import CORS
 setup_log()
 app = Flask(__name__)
 CORS(app)
-chain_data_fetcher = ChainDataFetcher(start_timestamp=parse_date("10:00-12/07/2020"),
-                                      end_timestamp=parse_date("23:59-15/07/2020"))
+chain_data_fetcher = ChainDataFetcher()
 chain_data_fetcher.start()
 
 

@@ -27,6 +27,7 @@ for date_dir in os.listdir(nodes_dir):
         trusted_nodes_to_days.setdefault(node_id, 0)
         trusted_nodes_to_days[node_id] += 1
 first = True
+final_trust_nodes = []
 for row in csv.reader(open("miner.csv")):
     if first:
         first = False
@@ -36,8 +37,10 @@ for row in csv.reader(open("miner.csv")):
     try:
         node_id = encode_hex(priv_to_pub(pubkey))
         if node_id in trusted_nodes_to_days:
-            print(trusted_nodes_to_days[node_id])
+            final_trust_nodes.append(trusted_nodes_to_days[node_id])
         else:
-            print(0)
+            final_trust_nodes.append(0)
     except Exception as _e:
-        print(0)
+        final_trust_nodes.append(0)
+for i in final_trust_nodes:
+    print(i)

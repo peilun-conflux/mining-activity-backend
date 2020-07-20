@@ -12,7 +12,7 @@ for row in csv.reader(open("miner.csv")):
     if first:
         first = False
         continue
-    addr = row[3][2:].lower()
+    addr = row[4][2:].lower()
     if addr in miner_to_period_and_count:
         active_periods.append(miner_to_period_and_count[addr][0] + 1)
         mined_blocks.append(miner_to_period_and_count[addr][1])

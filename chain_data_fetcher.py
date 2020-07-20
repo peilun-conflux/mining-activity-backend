@@ -204,11 +204,13 @@ class ChainDataFetcher(threading.Thread):
             max_timestamp = self.miners[miner].timestamps[-1]
             period = (max_timestamp - min_timestamp) / TIMESTAMP_HIST_COUNT
             hist = [0 for _ in range(TIMESTAMP_HIST_COUNT)]
-            for ts in self.miners[miner].timestamps[:-1]:
+            for ts in self.miners[miner].timestamps:
                 index = int((ts - min_timestamp) / period)
-                hist[index] += 1
+                if index < TIMESTAMP_HIST_COUNT:
+                    hist[index] += 1
+                else:
+                    hist[-1] += 1
             # Add max_timestamp
-            hist[-1] += 1
             for i in range(TIMESTAMP_HIST_COUNT - 1):
                 hist[i + 1] += hist[i]
         self._lock.release()

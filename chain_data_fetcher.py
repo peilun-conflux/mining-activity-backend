@@ -205,6 +205,7 @@ class ChainDataFetcher(threading.Thread):
     def miner_block_timestamps(self, miner):
         self._lock.acquire()
         if miner not in self.miners:
+            self._lock.release()
             return []
         else:
             # TODO This can be optimized if it's too slow.

@@ -22,12 +22,17 @@ MAX_TIMESTAMP = 1 << 63
 logger = logging.getLogger("fetcher")
 LATEST_EPOCH_KEY = "latest_epoch"
 
+
 class Block:
     def __init__(self, miner, reward, timestamp, epoch):
         self.miner = miner
         self.reward = reward
         self.timestamp = timestamp
         self.epoch = epoch
+        self.server_timestamp = int(time.time())
+
+    def get_timestamp(self):
+        return min(self.timestamp, self.server_timestamp)
 
 
 class Miner:
@@ -36,6 +41,7 @@ class Miner:
         self.addr = addr
         self.reward = 0
         self.timestamps = []
+        self.latest_mined_block = 0
         # This is None when we have not recovered all the blocks before we start.
         # It is initialized after we recovered those old blocks, and we assume we will not receive a new block
         # to "activate" a period when the node is inactive.
@@ -48,6 +54,8 @@ class Miner:
         assert self.addr == block.miner
         self.reward += block.reward
         bisect.insort(self.timestamps, block.timestamp)
+        if self.latest_mined_block < block.get_timestamp():
+            self.latest_mined_block = block.get_timestamp()
         gap = block.timestamp - self.timestamps[-1]
         if self.active_period is not None and 0 < gap <= MAX_ACTIVE_PERIOD:
             self.active_period += gap
@@ -189,7 +197,7 @@ class ChainDataFetcher(threading.Thread):
                 "block_count": len(miner.timestamps),
                 "active_period": int(active_period/3600),
                 "mining_reward": miner.reward,
-                "latest_mined_block": miner.timestamps[-1],
+                "latest_mined_block": miner.latest_mined_block,
             })
         self._lock.release()
         return json.dumps(miner_list)
@@ -210,7 +218,6 @@ class ChainDataFetcher(threading.Thread):
                     hist[index] += 1
                 else:
                     hist[-1] += 1
-            # Add max_timestamp
             for i in range(TIMESTAMP_HIST_COUNT - 1):
                 hist[i + 1] += hist[i]
         self._lock.release()

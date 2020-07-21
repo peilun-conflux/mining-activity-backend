@@ -148,6 +148,7 @@ class ChainDataFetcher(threading.Thread):
         logger.debug(f"update_epoch_number end: epoch_number={epoch_number}")
 
     async def catch_up(self, start_epoch_number: int, end_epoch_number: int):
+        start_epoch_number = max(1, start_epoch_number)
         futures = []
         executor = ThreadPoolExecutor(max_workers=4)
         for epoch_number in range(start_epoch_number, end_epoch_number+1):

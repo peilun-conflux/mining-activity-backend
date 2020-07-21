@@ -119,6 +119,8 @@ class ChainDataFetcher(threading.Thread):
             except Exception as e:
                 logger.warning(e)
                 traceback.print_exc()
+                self.pubsub_client.ws = None
+                subscription = self.pubsub_client.subscribe("epochs")
 
     async def update_epoch_number(self, epoch_number, catch_up):
         logger.debug(f"update_epoch_number: epoch_number={epoch_number}, catch_up={catch_up}")

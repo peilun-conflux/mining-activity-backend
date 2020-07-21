@@ -211,7 +211,7 @@ class ChainDataFetcher(threading.Thread):
         else:
             # TODO This can be optimized if it's too slow.
             min_timestamp = self.miners[miner].timestamps[0]
-            max_timestamp = self.miners[miner].timestamps[-1]
+            max_timestamp = min(self.miners[miner].timestamps[-1], self.miners[miner].latest_mined_block)
             period = (max_timestamp - min_timestamp) / TIMESTAMP_HIST_COUNT
             hist = [0 for _ in range(TIMESTAMP_HIST_COUNT)]
             for ts in self.miners[miner].timestamps:

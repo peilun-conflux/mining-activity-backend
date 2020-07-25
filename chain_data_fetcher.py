@@ -49,6 +49,7 @@ class Miner:
             self.active_period = 0
         else:
             self.active_period = None
+        logger.debug(f"add miner, addr={addr} activated={activated}")
 
     def add_block(self, block: Block):
         assert self.addr == block.miner
@@ -59,6 +60,7 @@ class Miner:
         gap = block.timestamp - self.timestamps[-1]
         if self.active_period is not None and 0 < gap <= MAX_ACTIVE_PERIOD:
             self.active_period += gap
+        logger.debug(f"add block, miner={block.miner} active_period={self.active_period}")
 
     def activate(self):
         latest_ts = self.timestamps[0]
@@ -151,6 +153,7 @@ class ChainDataFetcher(threading.Thread):
 
     async def catch_up(self, start_epoch_number: int, end_epoch_number: int):
         start_epoch_number = max(1, start_epoch_number)
+        logger.info(f"catch_up starts: start={start_epoch_number} end={end_epoch_number}")
         futures = []
         executor = ThreadPoolExecutor(max_workers=4)
         for epoch_number in range(start_epoch_number, end_epoch_number+1):
@@ -163,6 +166,7 @@ class ChainDataFetcher(threading.Thread):
             self.miners[miner_addr].activate()
         self.activated = True
         self._lock.release()
+        logger.info(f"catch_up ends: self.activated={self.activated}")
 
     async def log_progress(self):
         while True:

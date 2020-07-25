@@ -56,7 +56,8 @@ class Miner:
         self.reward += block.reward
         if self.latest_mined_block < block.get_timestamp():
             self.latest_mined_block = block.get_timestamp()
-        gap = block.timestamp - self.timestamps[-1]
+        if len(self.timestamps) != 0:
+            gap = block.timestamp - self.timestamps[-1]
         if self.active_period is not None and 0 < gap <= MAX_ACTIVE_PERIOD:
             self.active_period += gap
         bisect.insort(self.timestamps, block.timestamp)

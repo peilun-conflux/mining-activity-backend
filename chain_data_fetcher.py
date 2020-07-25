@@ -54,12 +54,12 @@ class Miner:
     def add_block(self, block: Block):
         assert self.addr == block.miner
         self.reward += block.reward
-        bisect.insort(self.timestamps, block.timestamp)
         if self.latest_mined_block < block.get_timestamp():
             self.latest_mined_block = block.get_timestamp()
         gap = block.timestamp - self.timestamps[-1]
         if self.active_period is not None and 0 < gap <= MAX_ACTIVE_PERIOD:
             self.active_period += gap
+        bisect.insort(self.timestamps, block.timestamp)
         logger.debug(f"add block, miner={block.miner} active_period={self.active_period}")
 
     def activate(self):

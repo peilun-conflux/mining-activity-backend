@@ -36,6 +36,7 @@ for row in csv.reader(open("miner.csv")):
     pubkey = row[5]
     try:
         node_id = encode_hex(priv_to_pub(pubkey))
+        print(node_id, pubkey)
         if node_id in trusted_nodes_to_days:
             final_trust_nodes.append(trusted_nodes_to_days[node_id])
         else:

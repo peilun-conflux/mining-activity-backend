@@ -12,7 +12,7 @@ for row in csv.reader(open("miner.csv")):
     if first:
         first = False
         continue
-    raw_addr = row[4].lower()
+    raw_addr = row[14].lower()
     if raw_addr.startswith("0x"):
         addr = raw_addr[2:]
     else:

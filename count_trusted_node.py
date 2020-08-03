@@ -32,8 +32,8 @@ for row in csv.reader(open("miner.csv")):
     if first:
         first = False
         continue
-    node_id = row[4][2:].lower()
-    pubkey = row[5]
+    node_id = row[14][2:].lower()
+    pubkey = row[15]
     try:
         node_id = encode_hex(priv_to_pub(pubkey))
         print(node_id, pubkey)

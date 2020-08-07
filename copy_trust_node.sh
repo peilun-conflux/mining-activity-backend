@@ -1,3 +1,4 @@
+#!/bin/bash
 date=`date +"%Y.%m.%d"`
 echo "date is" $date
 db_dir="trusted_nodes/$date"

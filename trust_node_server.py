@@ -44,7 +44,7 @@ def update():
 
 
 update()
-schedule.every().day.at("00:00").run(update)
+schedule.every().day.at("00:00").do(update)
 
 
 @app.route('/node-status-from-net-key', methods=['GET'])

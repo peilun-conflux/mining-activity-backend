@@ -64,3 +64,10 @@ def node_status_from_net_key():
     _lock.release()
     return r
 
+
+@app.route('/trusted-node-ip-list', methods=['GET'])
+def trusted_node_ip_list():
+    _lock.acquire()
+    ip_set = sorted(list(trusted_nodes_to_ip.values()))
+    _lock.release()
+    return json.dumps(ip_set)

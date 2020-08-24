@@ -219,14 +219,15 @@ class ChainDataFetcher(threading.Thread):
             # TODO This can be optimized if it's too slow.
             min_timestamp = self.miners[miner].timestamps[0]
             max_timestamp = min(self.miners[miner].timestamps[-1], self.miners[miner].latest_mined_block)
-            period = (max_timestamp - min_timestamp) / TIMESTAMP_HIST_COUNT
             hist = [0 for _ in range(TIMESTAMP_HIST_COUNT)]
-            for ts in self.miners[miner].timestamps:
-                index = int((ts - min_timestamp) / period)
-                if index < TIMESTAMP_HIST_COUNT:
-                    hist[index] += 1
-                else:
-                    hist[-1] += 1
+            period = (max_timestamp - min_timestamp) / TIMESTAMP_HIST_COUNT
+            if period != 0:
+                for ts in self.miners[miner].timestamps:
+                    index = int((ts - min_timestamp) / period)
+                    if index < TIMESTAMP_HIST_COUNT:
+                        hist[index] += 1
+                    else:
+                        hist[-1] += 1
             for i in range(TIMESTAMP_HIST_COUNT - 1):
                 hist[i + 1] += hist[i]
         self._lock.release()

@@ -36,7 +36,7 @@ def update():
                         try:
                             trusted_nodes = json.load(f)
                         except Exception as e:
-                            logger.warning("json load error: ", root, node_file)
+                            logger.warning(f"json load error: {root}, {node_file}")
                             continue
                         for node in trusted_nodes["nodes"]:
                             node_pub_key, ip = parse_node_url(node["url"])

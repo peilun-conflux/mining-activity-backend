@@ -14,6 +14,8 @@ nodes_dir = "trusted_nodes"
 for date_dir in os.listdir(nodes_dir):
     trusted_node_ids = set()
     for root, _, files in os.walk(os.path.join(nodes_dir, date_dir)):
+        if root.split('/')[-1] <= "2020.08.03":
+            continue
         # In one day, a miner is regarded a trusted node if it appears at any node's trusted_nodes.
         for node_file in files:
             if node_file.endswith("trusted_nodes.json"):
@@ -36,7 +38,7 @@ for row in csv.reader(open("miner.csv")):
     pubkey = row[15]
     try:
         node_id = encode_hex(priv_to_pub(pubkey))
-        print(node_id, pubkey)
+        # print(node_id, pubkey)
         if node_id in trusted_nodes_to_days:
             final_trust_nodes.append(trusted_nodes_to_days[node_id])
         else:

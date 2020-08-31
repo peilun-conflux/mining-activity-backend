@@ -50,7 +50,11 @@ schedule.every().day.at("00:00").do(update)
 @app.route('/node-status-from-net-key', methods=['GET'])
 def node_status_from_net_key():
     prikey = request.args.get("key")
-    node_id = encode_hex(priv_to_pub(prikey))
+    try:
+        node_id = encode_hex(priv_to_pub(prikey))
+    except:
+        print("Invalid key format: ", prikey)
+        return []
     _lock.acquire()
     if node_id in trusted_nodes_to_days:
         r = json.dumps({

@@ -1,3 +1,4 @@
+import logging
 import threading
 
 from flask import Flask, request
@@ -20,6 +21,7 @@ _lock = threading.Lock()
 trusted_nodes_to_days = {}
 trusted_nodes_to_ip = {}
 nodes_dir = "trusted_nodes"
+logger = logging.getLogger("node_server")
 
 
 def update():
@@ -31,7 +33,11 @@ def update():
             for node_file in files:
                 if node_file.endswith("trusted_nodes.json"):
                     with open(os.path.join(root, node_file), "r") as f:
-                        trusted_nodes = json.load(f)
+                        try:
+                            trusted_nodes = json.load(f)
+                        except Exception as e:
+                            logger.warning("json load error: ", root, node_file)
+                            continue
                         for node in trusted_nodes["nodes"]:
                             node_pub_key, ip = parse_node_url(node["url"])
                             trusted_node_ids.add(node_pub_key)

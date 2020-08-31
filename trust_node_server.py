@@ -60,7 +60,7 @@ def node_status_from_net_key():
         node_id = encode_hex(priv_to_pub(prikey))
     except:
         print("Invalid key format: ", prikey)
-        return []
+        return "{}"
     _lock.acquire()
     if node_id in trusted_nodes_to_days:
         r = json.dumps({

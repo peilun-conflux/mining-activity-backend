@@ -14,7 +14,7 @@ nodes_dir = "trusted_nodes"
 for date_dir in os.listdir(nodes_dir):
     trusted_node_ids = set()
     for root, _, files in os.walk(os.path.join(nodes_dir, date_dir)):
-        if root.split('/')[-1] <= "2020.08.03":
+        if root.split('/')[-1] < "2020.08.25" or root.split('/')[-1] > "2020.08.31":
             continue
         # In one day, a miner is regarded a trusted node if it appears at any node's trusted_nodes.
         for node_file in files:

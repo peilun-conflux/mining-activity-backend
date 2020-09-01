@@ -15,8 +15,7 @@ from utils.simple_proxy import SimpleRpcProxy
 from utils.utils import http_rpc_url, pubsub_url
 
 MAX_ACTIVE_PERIOD = 3600 * 2  # 2h
-BLOCK_COUNT = 0
-TIMESTAMP_HIST_COUNT = 1000
+TIMESTAMP_HIST_COUNT = 2000
 MAX_TIMESTAMP = 1 << 63
 
 logger = logging.getLogger("fetcher")
@@ -41,6 +40,7 @@ class Miner:
         self.addr = addr
         self.reward = 0
         self.timestamps = []
+        self.all_timestamps = []
         self.latest_mined_block = 0
         # This is None when we have not recovered all the blocks before we start.
         # It is initialized after we recovered those old blocks, and we assume we will not receive a new block
@@ -51,17 +51,19 @@ class Miner:
             self.active_period = None
         logger.debug(f"add miner, addr={addr} activated={activated}")
 
-    def add_block(self, block: Block):
+    def add_block(self, block: Block, within_range: bool):
         assert self.addr == block.miner
-        self.reward += block.reward
-        if self.latest_mined_block < block.get_timestamp():
-            self.latest_mined_block = block.get_timestamp()
-        if len(self.timestamps) != 0:
-            gap = block.timestamp - self.timestamps[-1]
-            if self.active_period is not None and 0 < gap <= MAX_ACTIVE_PERIOD:
-                self.active_period += gap
-        bisect.insort(self.timestamps, block.timestamp)
-        logger.debug(f"add block, miner={block.miner} active_period={self.active_period}")
+        bisect.insort(self.all_timestamps, block.timestamp)
+        if within_range:
+            self.reward += block.reward
+            if self.latest_mined_block < block.get_timestamp():
+                self.latest_mined_block = block.get_timestamp()
+            if len(self.timestamps) != 0:
+                gap = block.timestamp - self.timestamps[-1]
+                if self.active_period is not None and 0 < gap <= MAX_ACTIVE_PERIOD:
+                    self.active_period += gap
+            bisect.insort(self.timestamps, block.timestamp)
+            logger.debug(f"add block, miner={block.miner} active_period={self.active_period}")
 
     def activate(self):
         latest_ts = self.timestamps[0]
@@ -144,8 +146,9 @@ class ChainDataFetcher(threading.Thread):
                 blocks[block_hash] = Block(author, reward, timestamp, epoch_number)
         self._lock.acquire()
         for block_hash, block in blocks.items():
-            if self.start_timestamp <= block.timestamp <= self.end_timestamp:
-                self.miners.setdefault(block.miner, Miner(block.miner, self.activated)).add_block(block)
+            self.miners\
+                .setdefault(block.miner, Miner(block.miner, self.activated))\
+                .add_block(block, self.start_timestamp <= block.timestamp <= self.end_timestamp)
         self._lock.release()
         self.blocks_db.update(blocks)
         if catch_up or self.activated:
@@ -184,10 +187,11 @@ class ChainDataFetcher(threading.Thread):
         if LATEST_EPOCH_KEY in self.metadata_db:
             last_epoch = self.metadata_db[LATEST_EPOCH_KEY]
             for block in self.blocks_db.values():
-                if block.epoch >= self.initial_epoch and self.start_timestamp <= block.timestamp <= self.end_timestamp:
-                    self._lock.acquire()
-                    self.miners.setdefault(block.miner, Miner(block.miner, self.activated)).add_block(block)
-                    self._lock.release()
+                self._lock.acquire()
+                self.miners\
+                    .setdefault(block.miner, Miner(block.miner, self.activated))\
+                    .add_block(block, block.epoch >= self.initial_epoch and self.start_timestamp <= block.timestamp <= self.end_timestamp)
+                self._lock.release()
             return last_epoch
         else:
             return self.initial_epoch
@@ -198,6 +202,8 @@ class ChainDataFetcher(threading.Thread):
         for miner_addr in self.miners:
             miner = self.miners[miner_addr]
             active_period = 0
+            if len(miner.timestamps) == 0:
+                continue
             if miner.active_period is not None:
                 active_period = miner.active_period
             miner_list.append({
@@ -216,13 +222,14 @@ class ChainDataFetcher(threading.Thread):
             self._lock.release()
             return []
         else:
+            timestamps = self.miners[miner].all_timestamps
             # TODO This can be optimized if it's too slow.
-            min_timestamp = self.miners[miner].timestamps[0]
-            max_timestamp = min(self.miners[miner].timestamps[-1], self.miners[miner].latest_mined_block)
+            min_timestamp = timestamps[0]
+            max_timestamp = timestamps[-1]
             hist = [0 for _ in range(TIMESTAMP_HIST_COUNT)]
             period = (max_timestamp - min_timestamp) / TIMESTAMP_HIST_COUNT
             if period != 0:
-                for ts in self.miners[miner].timestamps:
+                for ts in timestamps:
                     index = int((ts - min_timestamp) / period)
                     if index < TIMESTAMP_HIST_COUNT:
                         hist[index] += 1

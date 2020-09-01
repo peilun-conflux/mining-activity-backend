@@ -49,7 +49,7 @@ class Miner:
             self.active_period = 0
         else:
             self.active_period = None
-        logger.debug(f"add miner, addr={addr} activated={activated}")
+        # logger.debug(f"add miner, addr={addr} activated={activated}")
 
     def add_block(self, block: Block, within_range: bool):
         assert self.addr == block.miner
@@ -66,14 +66,19 @@ class Miner:
             logger.debug(f"add block, miner={block.miner} active_period={self.active_period}")
 
     def activate(self):
-        latest_ts = self.timestamps[0]
-        self.active_period = 0
-        for i in range(1, len(self.timestamps)):
-            # self.timestamps is sorted, so latest_ts is always increasing
-            gap = self.timestamps[i] - latest_ts
-            if gap <= MAX_ACTIVE_PERIOD:
-                self.active_period += gap
-            latest_ts = self.timestamps[i]
+        logger.debug(f"activate {self.addr}")
+        if len(self.timestamps) > 0:
+            latest_ts = self.timestamps[0]
+            self.active_period = 0
+            for i in range(1, len(self.timestamps)):
+                # self.timestamps is sorted, so latest_ts is always increasing
+                gap = self.timestamps[i] - latest_ts
+                if gap <= MAX_ACTIVE_PERIOD:
+                    self.active_period += gap
+                latest_ts = self.timestamps[i]
+        else:
+            self.active_period = 0
+        logger.debug(f"end activate {self.addr}")
 
 
 class ChainDataFetcher(threading.Thread):

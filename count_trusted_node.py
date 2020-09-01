@@ -20,7 +20,11 @@ for date_dir in os.listdir(nodes_dir):
         for node_file in files:
             if node_file.endswith("trusted_nodes.json"):
                 with open(os.path.join(root, node_file), "r") as f:
-                    trusted_nodes = json.load(f)
+                    try:
+                        trusted_nodes = json.load(f)
+                    except Exception as e:
+                        print(f"json load error: {root}, {node_file}")
+                        continue
                     for node in trusted_nodes["nodes"]:
                         node_pub_key = parse_pubkey_in_url(node["url"])
                         trusted_node_ids.add(node_pub_key)

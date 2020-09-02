@@ -12,7 +12,7 @@ from concurrent.futures.thread import ThreadPoolExecutor
 from utils.pubsub import PubSubClient
 from utils.rpc_client import RpcClient
 from utils.simple_proxy import SimpleRpcProxy
-from utils.utils import http_rpc_url, pubsub_url
+from utils.utils import http_rpc_url, pubsub_url, setup_log
 from xmlrpc.server import SimpleXMLRPCServer
 
 MAX_ACTIVE_PERIOD = 3600 * 2  # 2h
@@ -267,6 +267,7 @@ def start_rpc_server():
 
 
 if __name__ == "__main__":
+    setup_log()
     chain_data_fetcher = ChainDataFetcher()
     chain_data_fetcher.start()
     start_rpc_server()

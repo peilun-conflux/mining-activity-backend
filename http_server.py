@@ -1,15 +1,16 @@
 import logging
 import time
+import sys
 from flask import Flask, request
 from chain_data_fetcher import ChainDataFetcher
 from utils.utils import setup_log, parse_date
 from flask_cors import CORS
+from xmlrpc.client import ServerProxy
 
 setup_log()
 app = Flask(__name__)
 CORS(app)
-chain_data_fetcher = ChainDataFetcher()
-chain_data_fetcher.start()
+chain_data_fetcher = ServerProxy('http://localhost:9000')
 
 
 @app.route('/get-mined-block-timestamps', methods=['GET'])

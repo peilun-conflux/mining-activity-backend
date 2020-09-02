@@ -13,6 +13,7 @@ from utils.pubsub import PubSubClient
 from utils.rpc_client import RpcClient
 from utils.simple_proxy import SimpleRpcProxy
 from utils.utils import http_rpc_url, pubsub_url
+from xmlrpc.server import SimpleXMLRPCServer
 
 MAX_ACTIVE_PERIOD = 3600 * 2  # 2h
 TIMESTAMP_HIST_COUNT = 2000
@@ -249,3 +250,23 @@ class ChainDataFetcher(threading.Thread):
             "accumulative_count": hist,
         })
 
+
+def miner_list():
+    return chain_data_fetcher.miner_list()
+
+
+def miner_block_timestamps(miner):
+    return chain_data_fetcher.miner_block_timestamps(miner)
+
+
+def start_rpc_server():
+    server = SimpleXMLRPCServer(('localhost', 9000), logRequests=True)
+    server.register_function(miner_list)
+    server.register_function(miner_block_timestamps)
+
+
+if __name__ == "main":
+    chain_data_fetcher = ChainDataFetcher()
+    chain_data_fetcher.start()
+    start_rpc_server()
+    chain_data_fetcher.join()

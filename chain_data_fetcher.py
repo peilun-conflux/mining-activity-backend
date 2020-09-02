@@ -263,10 +263,10 @@ def start_rpc_server():
     server = SimpleXMLRPCServer(('localhost', 9000), logRequests=True)
     server.register_function(miner_list)
     server.register_function(miner_block_timestamps)
+    server.serve_forever()
 
 
-if __name__ == "main":
+if __name__ == "__main__":
     chain_data_fetcher = ChainDataFetcher()
     chain_data_fetcher.start()
     start_rpc_server()
-    chain_data_fetcher.join()

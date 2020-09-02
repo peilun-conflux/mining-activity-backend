@@ -2,8 +2,7 @@ import logging
 import time
 import sys
 from flask import Flask, request
-from chain_data_fetcher import ChainDataFetcher
-from utils.utils import setup_log, parse_date
+from utils.utils import setup_log
 from flask_cors import CORS
 from xmlrpc.client import ServerProxy
 

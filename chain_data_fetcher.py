@@ -12,7 +12,7 @@ from concurrent.futures.thread import ThreadPoolExecutor
 from utils.pubsub import PubSubClient
 from utils.rpc_client import RpcClient
 from utils.simple_proxy import SimpleRpcProxy
-from utils.utils import http_rpc_url, pubsub_url, setup_log
+from utils.utils import http_rpc_url, pubsub_url, setup_log, parse_date
 from xmlrpc.server import SimpleXMLRPCServer
 
 MAX_ACTIVE_PERIOD = 3600 * 2  # 2h

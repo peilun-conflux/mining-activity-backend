@@ -1,6 +1,7 @@
 import logging
 import time
 import sys
+import os
 from flask import Flask, request
 from utils.utils import setup_log
 from flask_cors import CORS
@@ -9,7 +10,8 @@ from xmlrpc.client import ServerProxy
 setup_log()
 app = Flask(__name__)
 CORS(app)
-chain_data_fetcher = ServerProxy('http://localhost:9000')
+LOCAL_PORT = os.getenv('LOCAL_PORT')
+chain_data_fetcher = ServerProxy(f'http://localhost:{LOCAL_PORT}')
 
 
 @app.route('/get-mined-block-timestamps', methods=['GET'])

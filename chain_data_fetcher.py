@@ -1,10 +1,12 @@
 import json
 import logging
+import subprocess
 import threading
 import asyncio
 import bisect
 import time
 import traceback
+import os
 
 import sqlitedict
 from concurrent.futures.thread import ThreadPoolExecutor
@@ -260,14 +262,18 @@ def miner_block_timestamps(miner):
 
 
 def start_rpc_server():
-    server = SimpleXMLRPCServer(('localhost', 9000), logRequests=True)
+    server = SimpleXMLRPCServer(('localhost', LOCAL_PORT), logRequests=True)
     server.register_function(miner_list)
     server.register_function(miner_block_timestamps)
     server.serve_forever()
 
 
 if __name__ == "__main__":
+    LOCAL_PORT = 9000
+    PUBLIC_PORT = 4000
+    os.environ["LOCAL_PORT"] = str(LOCAL_PORT)
     setup_log()
     chain_data_fetcher = ChainDataFetcher()
     chain_data_fetcher.start()
+    subprocess.Popen(["uwsgi", "--http", f"0.0.0.0:{PUBLIC_PORT}", "--module", "http_server:app"])
     start_rpc_server()

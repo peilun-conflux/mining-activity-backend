@@ -12,7 +12,7 @@ import sqlitedict
 from flask import request
 
 from utils.utils import encode_hex, priv_to_pub, setup_log
-
+UPDATE_INTERVAL_HOUR = 4
 
 class NodeEndpoint:
     def __init__(self, node_id, ip, tcp_port, udp_port):
@@ -35,20 +35,26 @@ class NodeEndpoint:
 
 def recover():
     if len(alive_node_db) == 0:
-        update()
+        return update()
     else:
-        for alive_nodes in alive_node_db.values():
+        last_ts = min([float(i) for i in alive_node_db.keys()])
+        for ts, alive_nodes in alive_node_db.items():
+            ts = float(ts)
             _lock.acquire()
             nodes_map.update(alive_nodes)
             # Count how many days these trusted_nodes have been
+            gap = max(0, ts - last_ts)
             for node_id in alive_nodes:
-                trusted_nodes_to_days.setdefault(node_id, 0)
-                trusted_nodes_to_days[node_id] += 1
+                trusted_nodes_time.setdefault(node_id, 0)
+                trusted_nodes_time[node_id] += gap
+            last_ts = ts
             _lock.release()
-    print(trusted_nodes_to_days)
+        return last_ts
+
 
 def update():
     now = time.time()
+    gap = now - global_last_ts
     nodes = get_node_set()
     node_db[now] = nodes
     alive_nodes = check_node_status(nodes)
@@ -57,9 +63,10 @@ def update():
     nodes_map.update(alive_nodes)
     # Count how many days these trusted_nodes have been
     for node_id in alive_nodes:
-        trusted_nodes_to_days.setdefault(node_id, 0)
-        trusted_nodes_to_days[node_id] += 1
+        trusted_nodes_time.setdefault(node_id, 0)
+        trusted_nodes_time[node_id] += gap
     _lock.release()
+    return now
 
 
 def get_node_set():
@@ -86,7 +93,7 @@ def check_node_status(nodes):
     for node in nodes.values():
         try:
             tcp_out = subprocess.run(["nc", "-vz", str(node.ip), str(node.tcp_port)],
-                                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=2, text=True).stdout
+                                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=3, text=True).stdout
         except Exception:
             logger.info(f"node {node.node_id} {node.ip} {node.tcp_port} error")
             logger.info(traceback.format_exc())
@@ -106,9 +113,9 @@ def check_node_status(nodes):
 
 def node_status_from_net_key(node_id):
     _lock.acquire()
-    if node_id in trusted_nodes_to_days:
+    if node_id in trusted_nodes_time:
         r = json.dumps({
-            "trusted_days": trusted_nodes_to_days[node_id],
+            "trusted_days": int(trusted_nodes_time[node_id] / 3600 / 24),
             "address": f"{nodes_map[node_id].ip}:{nodes_map[node_id].tpc_port}",
         })
     else:
@@ -131,11 +138,33 @@ def trusted_node_ip_list():
     })
 
 
+def trusted_node_list():
+    _lock.acquire()
+    data = []
+    for node_id in trusted_nodes_time:
+        data.append({
+            "pubkey": node_id,
+            "ip": nodes_map[node_id].ip,
+            "active_period": trusted_nodes_time[node_id],
+        })
+    _lock.release()
+    return json.dumps({
+        "data": data,
+    })
+
+
 def start_rpc_server():
     server = SimpleXMLRPCServer(('localhost', LOCAL_PORT), logRequests=True)
     server.register_function(node_status_from_net_key)
     server.register_function(trusted_node_ip_list)
+    server.register_function(trusted_node_list)
     server.serve_forever()
+
+
+def periodic_run():
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
 
 
 if __name__ == "__main__":
@@ -146,12 +175,14 @@ if __name__ == "__main__":
     node_db = sqlitedict.SqliteDict("node.db", tablename="all", autocommit=True)
     alive_node_db = sqlitedict.SqliteDict("node.db", tablename="alive", autocommit=True)
 
-    trusted_nodes_to_days = {}
+    trusted_nodes_time = {}
     nodes_map = {}
     _lock = threading.Lock()
 
-    recover()
-    schedule.every().day.at("00:00").do(update)
+    global_last_ts = time.time()
+    global_last_ts = recover()
+    schedule.every(UPDATE_INTERVAL_HOUR).hours.do(update)
+    threading.Thread(target=periodic_run, daemon=True).start()
 
     LOCAL_PORT = 9002
     PUBLIC_PORT = 4002

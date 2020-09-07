@@ -29,3 +29,8 @@ def node_status_from_net_key():
 @app.route('/trusted-node-ip-list', methods=['GET'])
 def trusted_node_ip_list():
     return node_status_fetcher.trusted_node_ip_list()
+
+
+@app.route('/trusted-node-list', methods=['GET'])
+def trusted_node_list():
+    return node_status_fetcher.trusted_node_list()

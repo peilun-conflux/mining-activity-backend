@@ -17,7 +17,7 @@ from utils.simple_proxy import SimpleRpcProxy
 from utils.utils import http_rpc_url, pubsub_url, setup_log, parse_date
 from xmlrpc.server import SimpleXMLRPCServer
 
-MAX_ACTIVE_PERIOD = 3600 * 2  # 2h
+MAX_ACTIVE_PERIOD = 3600 * 4  # 2h
 TIMESTAMP_HIST_COUNT = 2000
 MAX_TIMESTAMP = 1 << 63
 

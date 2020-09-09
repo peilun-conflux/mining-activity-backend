@@ -113,10 +113,10 @@ def check_node_status(nodes):
 
 def node_status_from_net_key(node_id):
     _lock.acquire()
-    if node_id in trusted_nodes_time:
+    if node_id in trusted_nodes_time and node_id in nodes_map:
         r = json.dumps({
-            "trusted_days": int(trusted_nodes_time[node_id] / 3600 / 24),
-            "address": f"{nodes_map[node_id].ip}:{nodes_map[node_id].tpc_port}",
+            "trusted_days": int(trusted_nodes_time[node_id] / 3600 / 24) + 1,
+            "address": f"{nodes_map[node_id].ip}:{nodes_map[node_id].tcp_port}",
         })
     else:
         r = json.dumps({

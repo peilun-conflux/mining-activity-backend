@@ -90,7 +90,11 @@ def get_node_set():
 
 def check_node_status(nodes):
     alive_nodes = {}
+    i = 0
+    total = len(nodes)
     for node in nodes.values():
+        logger.info(f"Check {i} out of {total} nodes")
+        i += 1
         try:
             tcp_out = subprocess.run(["nc", "-vz", str(node.ip), str(node.tcp_port)],
                                      stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=3, text=True).stdout

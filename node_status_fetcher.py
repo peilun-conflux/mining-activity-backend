@@ -109,7 +109,7 @@ def check_single_node(node):
         logger.info(f"node {node.node_id} {node.ip} {node.tcp_port} fail: {tcp_out}")
         return None
     else:
-        return None
+        return node
 
 
 def check_node_status(nodes):

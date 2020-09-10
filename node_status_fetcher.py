@@ -74,7 +74,7 @@ def get_node_set():
     for date_dir in os.listdir(nodes_dir):
         for root, _, files in os.walk(os.path.join(nodes_dir, date_dir)):
             # In one day, a miner is regarded a trusted node if it appears at any node's trusted_nodes.
-            for node_file in files:
+            for node_file in sorted(files):
                 if node_file.endswith("trusted_nodes.json"):
                     with open(os.path.join(root, node_file), "r") as f:
                         try:

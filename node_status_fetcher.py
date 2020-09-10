@@ -6,13 +6,14 @@ import threading
 import time
 import traceback
 from xmlrpc.server import SimpleXMLRPCServer
+from concurrent.futures.thread import ThreadPoolExecutor
 
 import schedule
 import sqlitedict
 from flask import request
 
 from utils.utils import encode_hex, priv_to_pub, setup_log
-UPDATE_INTERVAL_HOUR = 4
+UPDATE_INTERVAL_HOUR = 1
 
 class NodeEndpoint:
     def __init__(self, node_id, ip, tcp_port, udp_port):
@@ -88,30 +89,41 @@ def get_node_set():
     return nodes
 
 
+def check_single_node(node):
+    try:
+        tcp_out = subprocess.run(["nc", "-vz", str(node.ip), str(node.tcp_port)],
+                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=3, text=True).stdout
+    except Exception:
+        logger.info(f"node {node.node_id} {node.ip} {node.tcp_port} error")
+        logger.info(traceback.format_exc())
+        return None
+    ''' UDP check is inaccurate for now.
+    udp_out = subprocess.check_output(["nc", "-vzu", str(node.ip), str(node.udp_port)],
+                                      stderr=subprocess.STDOUT, timeout=5)
+    if "success" not in udp_out:
+        continue
+    '''
+    if "succeeded" not in tcp_out:
+        logger.info(f"node {node.node_id} {node.ip} {node.tcp_port} fail: {tcp_out}")
+        return None
+    else:
+        return None
+
+
 def check_node_status(nodes):
     alive_nodes = {}
     i = 0
     total = len(nodes)
+    executor = ThreadPoolExecutor(max_workers=12)
+    futures = []
     for node in nodes.values():
+        futures.append(executor.submit(check_single_node, node))
+    for f in futures:
         logger.info(f"Check {i} out of {total} nodes")
         i += 1
-        try:
-            tcp_out = subprocess.run(["nc", "-vz", str(node.ip), str(node.tcp_port)],
-                                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=3, text=True).stdout
-        except Exception:
-            logger.info(f"node {node.node_id} {node.ip} {node.tcp_port} error")
-            logger.info(traceback.format_exc())
-            continue
-        if "succeeded" not in tcp_out:
-            logger.info(f"node {node.node_id} {node.ip} {node.tcp_port} fail: {tcp_out}")
-            continue
-        ''' UDP check is inaccurate for now.
-        udp_out = subprocess.check_output(["nc", "-vzu", str(node.ip), str(node.udp_port)],
-                                          stderr=subprocess.STDOUT, timeout=5)
-        if "success" not in udp_out:
-            continue
-        '''
-        alive_nodes[node.node_id] = node
+        node = f.result()
+        if node is not None:
+            alive_nodes[node.node_id] = node
     return alive_nodes
 
 

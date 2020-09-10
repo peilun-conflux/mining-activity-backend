@@ -54,11 +54,13 @@ def recover():
 
 
 def update():
+    global latest_alive_nodes
     now = time.time()
     gap = now - global_last_ts
     nodes = get_node_set()
     node_db[now] = nodes
     alive_nodes = check_node_status(nodes)
+    latest_alive_nodes = alive_nodes
     alive_node_db[now] = alive_nodes
     _lock.acquire()
     nodes_map.update(alive_nodes)
@@ -166,6 +168,7 @@ def trusted_node_list():
     _lock.release()
     return json.dumps({
         "data": data,
+        "active_count": len(latest_alive_nodes),
     })
 
 
@@ -193,6 +196,7 @@ if __name__ == "__main__":
 
     trusted_nodes_time = {}
     nodes_map = {}
+    latest_alive_nodes = {}
     _lock = threading.Lock()
 
     global_last_ts = time.time()

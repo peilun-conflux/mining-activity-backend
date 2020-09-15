@@ -35,6 +35,7 @@ class NodeEndpoint:
 
 
 def recover():
+    global latest_alive_nodes
     if len(alive_node_db) == 0:
         return update()
     else:
@@ -49,6 +50,7 @@ def recover():
                 trusted_nodes_time.setdefault(node_id, 0)
                 trusted_nodes_time[node_id] += gap
             last_ts = ts
+            latest_alive_nodes = alive_nodes
             _lock.release()
         return last_ts
 
@@ -60,9 +62,9 @@ def update():
     nodes = get_node_set()
     node_db[now] = nodes
     alive_nodes = check_node_status(nodes)
-    latest_alive_nodes = alive_nodes
     alive_node_db[now] = alive_nodes
     _lock.acquire()
+    latest_alive_nodes = alive_nodes
     nodes_map.update(alive_nodes)
     # Count how many days these trusted_nodes have been
     for node_id in alive_nodes:

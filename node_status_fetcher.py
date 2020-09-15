@@ -57,6 +57,7 @@ def recover():
 
 def update():
     global latest_alive_nodes
+    global global_last_ts
     now = time.time()
     gap = now - global_last_ts
     nodes = get_node_set()
@@ -70,6 +71,7 @@ def update():
     for node_id in alive_nodes:
         trusted_nodes_time.setdefault(node_id, 0)
         trusted_nodes_time[node_id] += gap
+    global_last_ts = now
     _lock.release()
     return now
 

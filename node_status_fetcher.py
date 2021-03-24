@@ -176,11 +176,24 @@ def trusted_node_list():
     })
 
 
+def alive_node_ip_list():
+    _lock.acquire()
+    ip_set = set()
+    for node in latest_alive_nodes.values():
+        ip_set.add(node.ip)
+    ip_list = sorted(list(ip_set))
+    _lock.release()
+    return json.dumps({
+        "ip_list": ip_list
+    })
+
+
 def start_rpc_server():
     server = SimpleXMLRPCServer(('localhost', LOCAL_PORT), logRequests=True)
     server.register_function(node_status_from_net_key)
     server.register_function(trusted_node_ip_list)
     server.register_function(trusted_node_list)
+    server.register_function(alive_node_ip_list)
     server.serve_forever()
 
 

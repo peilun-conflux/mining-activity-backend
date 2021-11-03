@@ -107,12 +107,13 @@ class ChainDataFetcher(threading.Thread):
 
     async def start_async(self, last_epoch):
         log_fut = asyncio.create_task(self.log_progress())
-        subscription = await self.pubsub_client.subscribe("epochs")
-        # await self.sub(subscription)
-        sub_fut = asyncio.create_task(self.sub(subscription))
-        end_epoch_number = self.rpc_client.epoch_number()
+        # subscription = await self.pubsub_client.subscribe("epochs")
+        # sub_fut = asyncio.create_task(self.sub(subscription))
+        # end_epoch_number = self.rpc_client.epoch_number()
+        end_epoch_number = 345000
         catch_up_fut = asyncio.create_task(self.catch_up(last_epoch, end_epoch_number))
-        await asyncio.gather(sub_fut, catch_up_fut, log_fut)
+        # await asyncio.gather(sub_fut, catch_up_fut, log_fut)
+        await asyncio.gather(catch_up_fut, log_fut)
 
     async def sub(self, subscription):
         while True:
@@ -215,7 +216,7 @@ class ChainDataFetcher(threading.Thread):
             if miner.active_period is not None:
                 active_period = miner.active_period
             miner_list.append({
-                "address": miner_addr[2:],
+                "address": miner_addr,
                 "block_count": len(miner.timestamps),
                 "active_period": int(active_period/3600),
                 "mining_reward": miner.reward,
@@ -273,7 +274,7 @@ if __name__ == "__main__":
     PUBLIC_PORT = 4000
     os.environ["LOCAL_PORT"] = str(LOCAL_PORT)
     setup_log()
-    chain_data_fetcher = ChainDataFetcher()
+    chain_data_fetcher = ChainDataFetcher(server_ip="101.132.158.162")
     chain_data_fetcher.start()
     subprocess.Popen(["uwsgi", "--http", f"0.0.0.0:{PUBLIC_PORT}", "--module", "http_server:app"])
     start_rpc_server()

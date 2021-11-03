@@ -37,5 +37,5 @@ def trusted_node_list():
 
 
 @app.route('/alive-node-ip-list', methods=['GET'])
-def trusted_node_list():
+def alive_node_ip_list():
     return node_status_fetcher.alive_node_ip_list()
